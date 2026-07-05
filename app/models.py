@@ -19,9 +19,9 @@ class Product(Base):
 
     source = Column(String, nullable=False, default="manual")
     verified = Column(Boolean, nullable=False, default=False)
+    confidence = Column(Float, nullable=False, default=0.0)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-
 
 class FoodEntry(Base):
     __tablename__ = "food_entries"
