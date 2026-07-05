@@ -4,13 +4,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import FoodEntry
 from app.schemas import BarcodeRequest
-from app.services.barcode_service import lookup_barcode
+from app.services import products_service
+from app.repositories import food_entries_repository
 
 router = APIRouter(prefix="/barcode", tags=["barcode"])
 
+
 @router.post("/add")
 def add_barcode_entry(request: BarcodeRequest, db: Session = Depends(get_db)):
-    product = lookup_barcode(request.barcode)
+    product = products_service.get_or_create_by_barcode(db, request.barcode)
 
     if product is None:
         return {
@@ -18,23 +20,30 @@ def add_barcode_entry(request: BarcodeRequest, db: Session = Depends(get_db)):
             "message": f"Brak produktu w bazie: {request.barcode}"
         }
 
-    ratio = request.grams / 100
+    macros = products_service.calculate_entry_macros(product, request.grams)
 
     entry = FoodEntry(
-        name=product["name"],
-        grams=request.grams,
-        kcal=product["kcal_100g"] * ratio,
-        protein=product["protein_100g"] * ratio,
-        fat=product["fat_100g"] * ratio,
-        carbs=product["carbs_100g"] * ratio,
-        source="barcode"
+        name=macros["name"],
+        grams=macros["grams"],
+        kcal=macros["kcal"],
+        protein=macros["protein"],
+        fat=macros["fat"],
+        carbs=macros["carbs"],
+        meal_type=request.meal_type,
+        source="barcode",
     )
 
-    db.add(entry)
-    db.commit()
-    db.refresh(entry)
+    entry = food_entries_repository.create_entry(db, entry)
 
     return {
         "ok": True,
-        "entry": entry
+        "entry": entry,
+        "product": {
+            "id": product.id,
+            "name": product.name,
+            "brand": product.brand,
+            "source": product.source,
+            "verified": product.verified,
+            "confidence": product.confidence,
+        }
     }

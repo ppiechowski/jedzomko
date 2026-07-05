@@ -38,9 +38,10 @@ def lookup_barcode(barcode: str):
     nutriments = product.get("nutriments", {})
 
     return {
-        "name": product.get("product_name") or product.get("generic_name") or "Nieznany produkt",
-        "kcal_100g": number(nutriments.get("energy-kcal_100g")),
-        "protein_100g": number(nutriments.get("proteins_100g")),
-        "fat_100g": number(nutriments.get("fat_100g")),
-        "carbs_100g": number(nutriments.get("carbohydrates_100g")),
-    }
+    "name": product.get("product_name") or product.get("generic_name") or "Nieznany produkt",
+    "brand": product.get("brands"),
+    "kcal_100g": number(nutriments.get("energy-kcal_100g")),
+    "protein_100g": number(nutriments.get("proteins_100g")),
+    "fat_100g": number(nutriments.get("fat_100g")),
+    "carbs_100g": number(nutriments.get("carbohydrates_100g")),
+}
